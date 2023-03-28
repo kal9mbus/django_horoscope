@@ -1,6 +1,7 @@
 # application views.py
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseNotFound  # прописали чтобы можно было ответить html кодом
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
+from django.urls import reverse
 
 zodiac_dict = {
     'aries': 'Овен - первый знак зодиака, планета Марс (с 21 марта по 20 апреля).',
@@ -19,13 +20,32 @@ zodiac_dict = {
 }
 
 
-def get_info_about_zodiac_sign(request, sign_zodiac: str):  # принимаем необходимую переменную
+def index(request):
+    zodiacs = list(zodiac_dict)  # принимаем список всех знаков зодиака
+    zodiac_items = ''
+    for sign in zodiacs:
+        url_redirect = reverse('hrscp', args=[sign])
+        zodiac_items += f'<li><a href="{url_redirect}">{sign.title()}</a></li>'
+    response = f"""
+    <ol>
+        {zodiac_items}
+    </ol>
+    """
+    return HttpResponse(response)
+
+
+def get_info_about_zodiac_sign(request, sign_zodiac: str):
     description = zodiac_dict.get(sign_zodiac)
     if description:
-        return HttpResponse(description)#
+        return HttpResponse(f"<h2>{description}</h2>")
     else:
         return HttpResponseNotFound(f"Знак зодиака не найден {sign_zodiac}")
 
 
-def get_info_about_zodiac_sign_by_number(request, sign_zodiac: int):  # принимаем необходимую переменную
-    return HttpResponseNotFound(f"This is number {sign_zodiac}")
+def get_info_about_zodiac_sign_by_number(request, sign_zodiac: int):
+    zodiacs = list(zodiac_dict)  # преобразуем словарь в лист, для обращения по номеру
+    if sign_zodiac > len(zodiacs) and sign_zodiac > 0:
+        return HttpResponseNotFound(f"Неправильный порядковый номер знака зодиака {zodiacs}")
+    name_zodiac = zodiacs[sign_zodiac - 1]
+    url_redirect = reverse('hrscp', args=(name_zodiac,))
+    return HttpResponseRedirect(url_redirect)
